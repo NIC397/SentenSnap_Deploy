@@ -1,5 +1,5 @@
 import streamlit as st
-from src.core.senten_snap import SentenSnap
+from senten_snap import SentenSnap
 import sys
 import os
 

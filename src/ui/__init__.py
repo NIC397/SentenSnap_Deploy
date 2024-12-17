@@ -1,3 +1,0 @@
-"""
-SentenSnap Frontend by Streamlit
-"""
