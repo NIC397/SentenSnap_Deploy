@@ -1,6 +1,10 @@
 import streamlit as st
 from src.core.senten_snap import SentenSnap
+import sys
+import os
 
+# Add the src directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 class SentenSnapUI:
     def __init__(self):
