@@ -51,7 +51,7 @@ class SentenSnapUI:
             st.session_state["clicked_word"] = None
 
         # Section 1: Display Quote Words Prettily (Non-clickable)
-        st.write("Click the button below to generate a motivational or inspirational quote.")
+        st.write("Click the button below to generate a motivational quote.")
         if st.button("Generate Random Quote"):
             if not self.senten_snap:
                 st.error("Please enter your Gemini API key in the sidebar.")
