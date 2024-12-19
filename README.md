@@ -1,3 +1,3 @@
 # SentenSnap_Deploy
 
-python -m streamlit run src/ui/streamlit_app.py
+python -m streamlit run src/streamlit_app.py
