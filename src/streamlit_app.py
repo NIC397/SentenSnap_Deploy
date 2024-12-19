@@ -12,7 +12,7 @@ class SentenSnapUI:
     def __init__(self):
         self.senten_snap = None
         self.quote_result = None  # To store the generated quote result
-        self.definition_result = None  # To store the word definition result
+        self.definition_result = None  # To store the word snapshot result
 
     def render_sidebar(self):
         st.sidebar.header("Settings")
@@ -23,7 +23,7 @@ class SentenSnapUI:
     def render_home_page(self):
         st.title("🌟 Welcome to SentenSnap")
         st.markdown(
-            "Explore **motivational quotes** and get **detailed word definitions** with ease!"
+            "Explore **motivational quotes** and get **detailed word snapshots** with ease!"
         )
         st.markdown("---")
 
@@ -36,7 +36,7 @@ class SentenSnapUI:
 
             self.render_quote_section()
 
-        with st.expander("📚 Get a Word Definition", expanded=st.session_state.get("definition_expanded", False)):
+        with st.expander("📚 Get a Word Snapshot", expanded=st.session_state.get("definition_expanded", False)):
             # Set session state for mutual exclusivity
             if not st.session_state.get("definition_expanded", False):
                 st.session_state["definition_expanded"] = True
@@ -158,14 +158,14 @@ class SentenSnapUI:
 
     def render_definition_section(self):
         """
-        Render the word definition section.
+        Render the word snapshot section.
         """
         word = st.text_input(
             "Enter a word to search for its definition:",
             placeholder="Type a word here...",
         )
 
-        if st.button("Search Word Definition"):
+        if st.button("Search Word"):
             if not self.senten_snap:
                 st.error("Please enter your Gemini API key in the sidebar.")
             elif not word:
@@ -201,7 +201,7 @@ class SentenSnapUI:
 
     def fetch_definition(self, word):
         """
-        Fetch a word definition from the backend and parse it.
+        Fetch a word snapshot from the backend and parse it.
         """
         raw_response = self.senten_snap.define_word(word)
         
