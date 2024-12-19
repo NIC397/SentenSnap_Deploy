@@ -1,7 +1,7 @@
 # SentenSnap: Motivational Quotes and Word Snapshots
 
 ## Note
-This application is a modified version of the original [SentenSnap](https://github.com/NIC397/SentenSnap "SentenSnap") repository, which was designed to run with locally installed large language models (LLMs). The current version leverages [Streamlit](https://streamlit.io/) for its user interface and integrates the [Gemini API](https://ai.google.dev/gemini-api/docs/api-key) to deliver a fully deployed, cloud-based experience. While the image generation functionality from the original version has been omitted, this modification focuses on providing seamless access to motivational quotes and interactive word snapshots without requiring local LLM installations.
+This application is a modified version of the [SentenSnap](https://github.com/NIC397/SentenSnap "SentenSnap") repository, originally built to run with locally installed large language models (LLMs). The current version leverages [Streamlit](https://streamlit.io/) for its user interface and integrates the [Gemini API](https://ai.google.dev/gemini-api/docs/api-key) to deliver a fully deployed, cloud-based experience. While the image generation functionality from the original version has been omitted, this modification focuses on providing seamless access to motivational quotes and interactive word snapshots without requiring local LLM installations.
 
 
 ## Overview
