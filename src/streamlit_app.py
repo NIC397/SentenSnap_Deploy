@@ -15,33 +15,35 @@ class SentenSnapUI:
         self.definition_result = None  # To store the word snapshot result
 
     def render_sidebar(self):
-        st.sidebar.header("Settings")
+        st.sidebar.header("Settings 🛠️")
         api_key = st.sidebar.text_input("Enter your Gemini API Key", type="password")
         if api_key:
             self.senten_snap = SentenSnap(gemini_api_key=api_key)
+        # Create expanders for each section in the sidebar
+        self.quote_expander = st.sidebar.expander("Word 📸 from Quote", expanded=True)
+        self.knowledge_expander = st.sidebar.expander("Word 📸 from Knowledge", expanded=True)
+        self.book_expander = st.sidebar.expander("Word 📸 from Book", expanded=True)
 
     def render_home_page(self):
         st.title("🌟 Welcome to SentenSnap")
         st.markdown(
-            "Explore **motivational quotes** and get **detailed word snapshots** with ease!"
+            "Enhance your vocabulary effortlessly while exploring quotes, knowledge capsules, and books!"
         )
         st.markdown("---")
 
-        # Expandable sections with mutual exclusivity
-        with st.expander("📜 Generate a Random Quote", expanded=st.session_state.get("quote_expanded", False)):
-            # Set session state for mutual exclusivity
-            if not st.session_state.get("quote_expanded", False):
-                st.session_state["quote_expanded"] = True
-                st.session_state["definition_expanded"] = False
+        # Create tabs for the four sections
+        tabs = st.tabs(["🗣️ QuoteSnap", "📖 KnowledgeSnap", "📚 BookSnap", "🔍 WordSearch"])
 
+        with tabs[0]:
             self.render_quote_section()
 
-        with st.expander("📚 Get a Word Snapshot", expanded=st.session_state.get("definition_expanded", False)):
-            # Set session state for mutual exclusivity
-            if not st.session_state.get("definition_expanded", False):
-                st.session_state["definition_expanded"] = True
-                st.session_state["quote_expanded"] = False
+        with tabs[1]:
+            self.render_knowledge_section()
 
+        with tabs[2]:
+            self.render_book_section()
+
+        with tabs[3]:
             self.render_definition_section()
 
 
@@ -50,9 +52,8 @@ class SentenSnapUI:
         if "clicked_word" not in st.session_state:
             st.session_state["clicked_word"] = None
 
-        # Section 1: Display Quote Words Prettily (Non-clickable)
         st.write("Click the button below to generate a motivational quote.")
-        if st.button("Generate Random Quote"):
+        if st.button("Get a Random Quote Snapshot"):
             if not self.senten_snap:
                 st.error("Please enter your Gemini API key in the sidebar.")
             else:
@@ -60,11 +61,11 @@ class SentenSnapUI:
                 st.session_state["quote_result"] = self.fetch_random_quote()
 
         if "quote_result" in st.session_state and st.session_state["quote_result"]:
-            st.subheader("Random Quote")
+            st.subheader("Random Quote Snapshot")
             quote = st.session_state["quote_result"].get('Quote', 'No quote available.')
             words = quote.split()
 
-            # Display words prettily (non-clickable)
+            # Section 1: Display Quote Words Prettily (Non-clickable)
             st.markdown(
                 " ".join([f"<span style='font-size:18px; margin:4px;'>{word}</span>" for word in words]),
                 unsafe_allow_html=True,
@@ -104,14 +105,167 @@ class SentenSnapUI:
                 col1, col2, col3 = st.columns([2, 1, 1])
                 col1.write(word)
                 col2.write(difficulty)
-                if col3.button("Get Snapshot", key=f"word_{word}"):
+                if col3.button("Get Snapshot", key=f"quote_word_{word}"):
                     st.session_state["clicked_word"] = word  # Store clicked word in session state
 
             # Display definition in the sidebar
             if st.session_state["clicked_word"]:
                 word = st.session_state["clicked_word"]
-                with st.sidebar:
+                with self.quote_expander:
                     st.header("Word Snapshot")
+                    st.subheader(f"{word}")
+                    definition = self.fetch_definition(word)
+                    if definition:
+                        st.write(f"**Definition:** {definition.get('Definition', 'No definition available.')}")
+                        st.write(f"**Part of Speech:** {definition.get('Part of Speech', 'N/A')}")
+                        synonyms = definition.get('Synonyms', 'N/A')
+                        if synonyms != 'N/A':
+                            synonyms_list = synonyms.split(", ")
+                            st.write(f"**Synonyms:** {', '.join(synonyms_list)}")
+                        else:
+                            st.write(f"**Synonyms:** N/A")
+                        st.write(f"**Example Sentence:** {definition.get('Example Sentence', 'N/A')}")
+
+    def render_knowledge_section(self):
+        # Ensure session state initialization
+        if "clicked_knowledge" not in st.session_state:
+            st.session_state["clicked_knowledge"] = None
+
+        # Section 1: Display Knowledge Prettily (Non-clickable)
+        st.write("Click the button below to generate a random piece of knowledge or trivia.")
+        if st.button("Get a Random Knowledge Snapshot"):
+            if not self.senten_snap:
+                st.error("Please enter your Gemini API key in the sidebar.")
+            else:
+                st.session_state["definition_expanded"] = False
+                st.session_state["knowledge_result"] = self.fetch_random_knowledge()
+
+        if "knowledge_result" in st.session_state and st.session_state["knowledge_result"]:
+            st.subheader("Random Knowledge Snapshot")
+            knowledge = st.session_state["knowledge_result"].get('Knowledge', 'No knowledge available.')
+            words = knowledge.split()
+
+            # Section 1: Display Knowledge Words Prettily (Non-clickable)
+            st.markdown(
+                " ".join([f"<span style='font-size:18px; margin:4px;'>{word}</span>" for word in words]),
+                unsafe_allow_html=True,
+            )
+
+            source = st.session_state["knowledge_result"].get("Source", "Unknown")
+            context = st.session_state["knowledge_result"].get("Context", "")
+            st.write(f"Source: {source}")
+            st.write(f"Context: {context}")
+
+            # Section 2: Display Unique Words in a Table (Clickable)
+            st.markdown("---")
+            st.subheader("Words in Knowledge (Clickable for Snapshots)")
+
+            # Get unique words (remove punctuation and ignore case)
+            unique_words = set(
+                word.translate(str.maketrans("", "", string.punctuation)).lower()
+                for word in words
+            )
+            
+            # Compute difficulty and sort from hard to easy
+            words_with_difficulty = [
+                (word, self.get_word_difficulty(word), self.get_difficulty_rank(word))
+                for word in unique_words if word
+            ]
+            words_with_difficulty.sort(key=lambda x: x[2], reverse=True)  # Sort by difficulty rank (higher rank = harder)
+
+            # Create a Streamlit-based table layout
+            col1, col2, col3 = st.columns([2, 1, 1])
+            col1.markdown("**Word**")
+            col2.markdown("**Difficulty**")
+            col3.markdown("**Action**")
+
+            for word, difficulty, _ in words_with_difficulty:
+                col1, col2, col3 = st.columns([2, 1, 1])
+                col1.write(word)
+                col2.write(difficulty)
+                if col3.button("Get Snapshot", key=f"knowledge_word_{word}"):
+                    st.session_state["clicked_knowledge"] = word  # Store clicked word in session state
+
+            # Display definition in the sidebar
+            if st.session_state["clicked_knowledge"]:
+                word = st.session_state["clicked_knowledge"]
+                with self.knowledge_expander:
+                    st.header("Word Snapshot 📸")
+                    st.subheader(f"{word}")
+                    definition = self.fetch_definition(word)
+                    if definition:
+                        st.write(f"**Definition:** {definition.get('Definition', 'No definition available.')}")
+                        st.write(f"**Part of Speech:** {definition.get('Part of Speech', 'N/A')}")
+                        synonyms = definition.get('Synonyms', 'N/A')
+                        if synonyms != 'N/A':
+                            synonyms_list = synonyms.split(", ")
+                            st.write(f"**Synonyms:** {', '.join(synonyms_list)}")
+                        else:
+                            st.write(f"**Synonyms:** N/A")
+                        st.write(f"**Example Sentence:** {definition.get('Example Sentence', 'N/A')}")
+
+    def render_book_section(self):
+        # Ensure session state initialization
+        if "clicked_book" not in st.session_state:
+            st.session_state["clicked_book"] = None
+
+        st.write("Click the button below to generate a random book excerpt.")
+        if st.button("Get a Random Book Snapshot"):
+            if not self.senten_snap:
+                st.error("Please enter your Gemini API key in the sidebar.")
+            else:
+                st.session_state["definition_expanded"] = False
+                st.session_state["book_result"] = self.fetch_random_book()
+
+        # Section 1: Display Excerpt Words Prettily (Non-clickable)
+        if "book_result" in st.session_state and st.session_state["book_result"]:
+            st.subheader("Book Snapshot")
+            book_title = st.session_state["book_result"].get('Book Title', 'No title available.')
+            author = st.session_state["book_result"].get('Author', 'Unknown')
+            intro = st.session_state["book_result"].get('Intro', 'No intro available.')
+            excerpt = st.session_state["book_result"].get('Excerpt', 'No excerpt available.')
+
+            st.write(f"**Title:** {book_title}")
+            st.write(f"**Author:** {author}")
+            st.write(f"**Intro:** {intro}")
+            st.write(f"**Excerpt:** {excerpt}")
+        
+            # Section 2: Display Unique Words in a Table (Clickable)
+            st.markdown("---")
+            st.subheader("Words in Excerpt (Clickable for Snapshots)")
+
+            # Get unique words (remove punctuation and ignore case)
+            words = excerpt.split()
+            unique_words = set(
+                word.translate(str.maketrans("", "", string.punctuation)).lower()
+                for word in words
+            )
+            
+            # Compute difficulty and sort from hard to easy
+            words_with_difficulty = [
+                (word, self.get_word_difficulty(word), self.get_difficulty_rank(word))
+                for word in unique_words if word
+            ]
+            words_with_difficulty.sort(key=lambda x: x[2], reverse=True)  # Sort by difficulty rank (higher rank = harder)
+
+            # Create a Streamlit-based table layout
+            col1, col2, col3 = st.columns([2, 1, 1])
+            col1.markdown("**Word**")
+            col2.markdown("**Difficulty**")
+            col3.markdown("**Action**")
+
+            for word, difficulty, _ in words_with_difficulty:
+                col1, col2, col3 = st.columns([2, 1, 1])
+                col1.write(word)
+                col2.write(difficulty)
+                if col3.button("Get Snapshot", key=f"book_word_{word}"):
+                    st.session_state["clicked_book"] = word  # Store clicked word in session state
+
+            # Display definition in the sidebar
+            if st.session_state["clicked_book"]:
+                word = st.session_state["clicked_book"]
+                with self.book_expander:
+                    st.header("Word Snapshot 📸")
                     st.subheader(f"{word}")
                     definition = self.fetch_definition(word)
                     if definition:
@@ -211,6 +365,28 @@ class SentenSnapUI:
         
         # Add the searched word to the result for display purposes
         raw_response["Word"] = word
+        return raw_response
+
+    def fetch_random_book(self):
+        """
+        Fetch a random book excerpt from the backend and parse it.
+        """
+        raw_response = self.senten_snap.generate_random_book()
+        
+        if "error" in raw_response:
+            st.error(raw_response["error"])
+            return None
+        return raw_response
+
+    def fetch_random_knowledge(self):
+        """
+        Fetch a random piece of knowledge from the backend and parse it.
+        """
+        raw_response = self.senten_snap.generate_random_knowledge()
+        
+        if "error" in raw_response:
+            st.error(raw_response["error"])
+            return None
         return raw_response
 
 

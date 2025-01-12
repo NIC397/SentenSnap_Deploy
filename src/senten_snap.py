@@ -65,3 +65,44 @@ class SentenSnap:
             return self.parse_table_response(raw_response)
         except Exception as e:
             return {"error": f"Error during random quote generation: {e}"}
+    
+    def generate_random_knowledge(self):
+        if not self.model:
+            return {"error": "Gemini API key not configured"}
+        try:
+            prompt = """
+            Generate a random piece of knowledge or trivia that is unique and interesting. The knowledge should be sourced from a variety of materials, including but not limited to scientific facts, historical events, cultural information, and general trivia. Respond in a table format as follows:
+
+            | Field        | Value                                                                 |
+            |--------------|----------------------------------------------------------------------|
+            | Knowledge    | "The exact piece of knowledge or trivia, enclosed in quotation marks."|
+            | Source       | The source of the knowledge or trivia.                                |
+            | Context      | A brief explanation of the context or background of the knowledge.    |
+            """
+            response = self.model.generate_content(prompt)
+            raw_response = response.text if response.parts else "No response generated"
+            
+            return self.parse_table_response(raw_response)
+        except Exception as e:
+            return {"error": f"Error during random knowledge generation: {e}"}
+
+    def generate_random_book(self):
+        if not self.model:
+            return {"error": "Gemini API key not configured"}
+        try:
+            prompt = """
+            Genreate a random book and provide information of it in a table format as follows:
+
+            | Field        | Value                                                                |
+            |--------------|----------------------------------------------------------------------|
+            | Book Title   | The title of the book.                                               |
+            | Author       | The full name of the author.                                         |
+            | Intro        | A brief introduction and overview of the book.                       |
+            | Excerpt      | An excerpt or a famous piece of text of the book.                    |
+            """
+            response = self.model.generate_content(prompt)
+            raw_response = response.text if response.parts else "No response generated"
+            
+            return self.parse_table_response(raw_response)
+        except Exception as e:
+            return {"error": f"Error during random book generation: {e}"}
